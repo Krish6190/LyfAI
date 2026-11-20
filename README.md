@@ -49,8 +49,9 @@ For a non-Docker backend, use `DATABASE_URL=sqlite:///./app.db` and set the othe
 1. Push this folder to a public GitHub repository.
 2. In Render, choose **New + > Web Service**, connect the repository, and select **Docker**.
 3. Set the Docker context/root directory to `backend`.
-4. Choose a free instance for a demo, or attach a persistent disk mounted at `/data` if SQLite data must survive redeploys. Render's ephemeral filesystem can reset SQLite data.
-5. Add these environment variables:
+4. You do **not** create a separate database: the application creates `/data/app.db` and its tables automatically on startup.
+5. Attach a persistent disk mounted at `/data` if SQLite data must survive redeploys. Render's default filesystem is ephemeral, and persistent disks require a paid Render service.
+6. Add these environment variables:
 
    - `LLM_API_KEYS`: two comma-separated provider keys
    - `LLM_MODEL`: for example `groq/llama-3.1-8b-instant`
@@ -59,7 +60,7 @@ For a non-Docker backend, use `DATABASE_URL=sqlite:///./app.db` and set the othe
    - `ALLOWED_ORIGINS`: temporarily use `https://your-project.vercel.app`, then update it after Vercel deploys
    - `ENABLE_FAILURE_SIMULATION`: `true`
    - `DEFAULT_SYSTEM_PROMPT`: `You are a helpful, concise assistant.`
-6. Deploy and open `https://your-service.onrender.com/health`. It should return `"status":"ok"`.
+7. Deploy and open `https://your-service.onrender.com/health`. It should return `"status":"ok"`.
 
 ### 2. Deploy the frontend on Vercel
 
@@ -71,6 +72,18 @@ For a non-Docker backend, use `DATABASE_URL=sqlite:///./app.db` and set the othe
 6. Go back to Render and set `ALLOWED_ORIGINS` to the exact Vercel URL, then redeploy the backend.
 
 The browser frontend must use the Render URL, not `localhost`. Test the connection by sending a message and opening the backend `/health` endpoint.
+
+### Showing the Docker requirement
+
+Docker is explicitly mandatory in the assignment. In your demo, show:
+
+1. `make up` starting both services.
+2. `docker compose ps` showing `backend` and `frontend` as running.
+3. `http://localhost:3000` displaying the chat.
+4. `http://localhost:8000/health` returning the health JSON.
+5. `make down` stopping the stack.
+
+For the live submission, Render runs the backend Dockerfile and Vercel builds the frontend Docker-independent. The repository still includes the required Dockerfiles, `docker-compose.yml`, named `/data` volume, and Makefile.
 
 ## 3. Design decisions: key fallback, caching, SQLite session storage
 
