@@ -67,6 +67,10 @@ export default function App() {
     }
   }
 
+  function useSuggestion(text) {
+    setMessage(text);
+  }
+
   async function selectSession(id) {
     if (id === sessionId || loadingSession) return;
     if (draftId === sessionId) {
@@ -129,10 +133,16 @@ export default function App() {
   return (
     <main className="app-shell">
       <aside className="session-panel">
-        <p className="eyebrow">LYFAI / SESSIONS</p>
-        <h2>Conversations</h2>
+        <div className="brand">
+          <span className="brand-mark">✦</span>
+          <div>
+            <strong>LYFAI</strong>
+            <small>Think · Create · Explore</small>
+          </div>
+        </div>
+        <p className="session-heading">◷ Sessions</p>
         <button className="new-session-button" onClick={createSession}>
-          + New conversation
+          <span>＋</span> New conversation
         </button>
         <div className="session-list">
           {draftId && (
@@ -142,8 +152,11 @@ export default function App() {
                 onClick={() => selectSession(draftId)}
                 disabled={loadingSession || draftId === sessionId}
               >
-                <strong>New conversation</strong>
-                <small>{draftId}</small>
+                <span className="session-icon">▱</span>
+                <span>
+                  <strong>New conversation</strong>
+                  <small>◷ {draftId}</small>
+                </span>
               </button>
             </div>
           )}
@@ -154,8 +167,11 @@ export default function App() {
                 onClick={() => selectSession(item.id)}
                 disabled={loadingSession}
               >
-                <strong>{item.title}</strong>
-                <small>{item.id}</small>
+                <span className="session-icon">▱</span>
+                <span>
+                  <strong>{item.title}</strong>
+                  <small>◷ {item.id}</small>
+                </span>
               </button>
               <button
                 className="delete-session"
@@ -168,19 +184,26 @@ export default function App() {
             </div>
           ))}
         </div>
-        <p className="session-note">Your sessions are remembered in this browser.</p>
+        <div className="session-tools">
+          <button title="Settings" aria-label="Settings">⚙</button>
+          <button title="Theme" aria-label="Theme">◐</button>
+        </div>
+        <p className="session-note">⚡ Your sessions are remembered in this browser.</p>
       </aside>
       <section className="chat-card">
         <header>
           <div>
             <p className="eyebrow">LYFAI / PRIVATE CHAT</p>
-            <h1>Think out loud.</h1>
+            <h1>Think out loud<span>.</span></h1>
             <p className="subtitle">A resilient AI workspace with transparent answers.</p>
           </div>
-          <span className="status-dot">online</span>
+          <div className="header-tools">
+            <span className="status-dot">Online</span>
+            <button className="profile-button" aria-label="Profile">●</button>
+          </div>
         </header>
         <label className="prompt-label">
-          <span className="prompt-heading">System prompt <em>optional</em></span>
+          <span className="prompt-heading"><span className="prompt-spark">✦</span> System prompt <em>optional</em></span>
           <textarea
             data-testid="system-prompt-input"
             value={systemPrompt}
@@ -193,8 +216,13 @@ export default function App() {
         <div className="conversation">
           {messages.length === 0 && (
             <div className="empty-state">
-              <span>✦</span>
-              <p>Ask anything to start a new session.</p>
+              <div className="orb" aria-hidden="true"><span>✦</span></div>
+              <p>Ask <strong>anything</strong> to start a new session.</p>
+              <div className="suggestions">
+                <button type="button" onClick={() => useSuggestion("Explain this concept.")}>✧ Explain this concept...</button>
+                <button type="button" onClick={() => useSuggestion("Help me code.")}>‹› Help me code...</button>
+                <button type="button" onClick={() => useSuggestion("Give me ideas.")}>♧ Give me ideas...</button>
+              </div>
             </div>
           )}
           {messages.map((item, index) => <Message key={index} message={item} />)}
