@@ -177,15 +177,17 @@ export default function App() {
             <h1>Think out loud.</h1>
             <p className="subtitle">A resilient AI workspace with transparent answers.</p>
           </div>
-          <span className="status-dot">● online</span>
+          <span className="status-dot">online</span>
         </header>
         <label className="prompt-label">
-          System prompt <span>optional</span>
-          <input
+          <span className="prompt-heading">System prompt <em>optional</em></span>
+          <textarea
             data-testid="system-prompt-input"
             value={systemPrompt}
             onChange={(event) => setSystemPrompt(event.target.value)}
             placeholder="Shape the assistant's voice..."
+            rows="2"
+            maxLength="400"
           />
         </label>
         <div className="conversation">
