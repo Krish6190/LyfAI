@@ -103,6 +103,18 @@ The backend exposes:
 - `POST /chat`
 - `GET /sessions/{session_id}/messages`
 
+### Backend environment variables
+
+| Variable | Meaning |
+|---|---|
+| `LLM_API_KEYS` | Comma-separated key pool, with at least two keys. Key IDs are assigned in order as `key_1`, `key_2`, and so on. |
+| `DATABASE_URL` | SQLite location. Docker uses `sqlite:////data/app.db`. |
+| `ALLOWED_ORIGINS` | Comma-separated browser origins permitted by CORS. |
+| `ENABLE_FAILURE_SIMULATION` | Set to `true` to enable the `X-Simulate-Failure` failover test header. |
+| `LLM_MODEL` | LiteLLM model name, such as `groq/openai/gpt-oss-20b`. |
+| `LLM_API_BASE` | OpenAI-compatible provider base URL, such as `https://api.groq.com/openai/v1`. |
+| `DEFAULT_SYSTEM_PROMPT` | Optional fallback system prompt used when a request does not provide one. |
+
 A chat request is JSON:
 
 ```json
@@ -141,6 +153,15 @@ curl.exe -X POST https://lyfai.onrender.com/chat `
 
 This is an API test, not a chat-box message. The header makes `key_1` behave as if it returned 429 for that request, and the response should use `key_2` with `fallback_attempts: 1`.
 
+Supported simulation header formats:
+
+| Header | Result |
+|---|---|
+| `X-Simulate-Failure: key_1=429` | `key_1` fails with 429; `key_2` should answer successfully. |
+| `X-Simulate-Failure: key_1=500` | `key_1` fails with 500; `key_2` should answer successfully. |
+| `X-Simulate-Failure: key_1=429,key_2=500` | Both listed keys fail for this request. |
+| `X-Simulate-Failure: *=429` | Every configured key fails with 429 and the API returns `503`. |
+
 Use `X-Simulate-Failure: *=429` to demonstrate all-provider failure. It should return `503 {"detail":"all providers unavailable"}` without adding the failed request to history.
 
 ### Per-message usage
@@ -166,7 +187,6 @@ npm run build
 ## 5. Setup Used: your editor and AI tools
 
 - Editor: VS Code
-- AI development assistant: GitHub Copilot
 - Frontend: React, Vite, CSS, JavaScript
 - Backend: Python, FastAPI, Pydantic
 - Model gateway: LiteLLM
