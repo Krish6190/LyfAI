@@ -53,6 +53,18 @@ Start the complete stack:
 make up
 ```
 
+If `make` is not available in Windows PowerShell, use Docker Compose directly:
+
+```powershell
+docker compose up --build
+```
+
+To keep the stack running in the background:
+
+```powershell
+docker compose up --build -d
+```
+
 Open:
 
 - Website: [http://localhost:3000](http://localhost:3000)
@@ -62,6 +74,12 @@ Stop the stack with:
 
 ```powershell
 make down
+```
+
+Windows PowerShell alternative:
+
+```powershell
+docker compose down
 ```
 
 The backend creates the SQLite database automatically. Docker stores it in the named `app_data` volume mounted at `/data`.
