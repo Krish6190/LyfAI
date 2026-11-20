@@ -140,6 +140,8 @@ Open [https://lyfai.onrender.com/health](https://lyfai.onrender.com/health). It 
 3. Send the exact same message.
 4. The second response should show `LLM_CACHE`, identical reply text, and a `null` key ID.
 
+The cache key includes the complete message list sent to the model. Repeating the same text inside an existing session does not usually reuse the cache because the session history now adds earlier messages. Repeat the first message in a second, separate session to demonstrate the assignment's cache-hit behavior.
+
 ### Failover
 
 Run this from a separate PowerShell window:

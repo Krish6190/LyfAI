@@ -78,11 +78,27 @@ export default function App() {
     }
   }
 
+  function createSession() {
+    const id = newSessionId();
+    setSessions((current) => [
+      { id, title: "New conversation" },
+      ...current.filter((item) => item.id !== id),
+    ].slice(0, 12));
+    setSessionId(id);
+    setMessages([]);
+    setMessage("");
+    setSystemPrompt("");
+    setError("");
+  }
+
   return (
     <main className="app-shell">
       <aside className="session-panel">
         <p className="eyebrow">LYFAI / SESSIONS</p>
         <h2>Conversations</h2>
+        <button className="new-session-button" onClick={createSession}>
+          + New conversation
+        </button>
         <div className="session-list">
           {sessions.map((item) => (
             <button

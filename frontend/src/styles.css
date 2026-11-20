@@ -7,6 +7,7 @@ body { margin: 0; min-width: 320px; }
 .chat-card { width: min(840px, 100%); min-height: 720px; padding: clamp(24px, 5vw, 56px); border: 1px solid #35443a; border-radius: 28px; background: #18211c; box-shadow: 0 24px 80px #080c09aa; display: flex; flex-direction: column; gap: 28px; }
 .session-panel { width: 220px; align-self: stretch; padding: 24px 0; }
 .session-panel h2 { margin: 10px 0 22px; font-size: 1.15rem; }
+.new-session-button { width: 100%; margin-bottom: 10px; }
 .session-list { display: grid; gap: 8px; }
 .session-item { width: 100%; min-height: auto; padding: 11px 12px; border: 1px solid #35443a; border-radius: 10px; color: #d3ded4; background: #18211c; text-align: left; font-size: .75rem; }
 .session-item.selected { border-color: #b7ecb4; background: #25352a; }
@@ -27,6 +28,12 @@ input:focus, textarea:focus { border-color: #9ade9d; }
 .empty-state span { display: block; color: #b7ecb4; font-size: 2rem; }
 .message { max-width: 82%; padding: 15px 18px; border-radius: 16px; line-height: 1.55; }
 .message p { margin: 0; white-space: pre-wrap; }
+.markdown-content { line-height: 1.55; }
+.markdown-content p { margin: 0 0 10px; }
+.markdown-content p:last-child { margin-bottom: 0; }
+.markdown-content strong { color: #edf5ee; }
+.markdown-content ul, .markdown-content ol { margin: 8px 0; padding-left: 22px; }
+.markdown-content li { margin: 4px 0; }
 .user-message { align-self: flex-end; color: #142016; background: #b7ecb4; border-bottom-right-radius: 4px; }
 .assistant-message { align-self: flex-start; border: 1px solid #35483a; background: #202c24; border-bottom-left-radius: 4px; }
 .metadata { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 13px; font-size: .62rem; letter-spacing: .02em; text-transform: none; }
