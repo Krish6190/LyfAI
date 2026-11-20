@@ -9,7 +9,11 @@ body { margin: 0; min-width: 320px; }
 .session-panel h2 { margin: 10px 0 22px; font-size: 1.15rem; }
 .new-session-button { width: 100%; margin-bottom: 10px; }
 .session-list { display: grid; gap: 8px; }
+.session-row { display: flex; gap: 5px; align-items: stretch; border: 1px solid transparent; border-radius: 10px; }
+.session-row.selected { border-color: #b7ecb4; }
+.session-row.selected .session-item { background: #25352a; }
 .session-item { width: 100%; min-height: auto; padding: 11px 12px; border: 1px solid #35443a; border-radius: 10px; color: #d3ded4; background: #18211c; text-align: left; font-size: .75rem; }
+.delete-session { min-width: 34px; min-height: 34px; margin: 5px 5px 5px 0; padding: 0; border-radius: 8px; color: #ffb1a9; background: #382020; }
 .session-item.selected { border-color: #b7ecb4; background: #25352a; }
 .session-item strong, .session-item small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .session-item small, .session-note { margin-top: 5px; color: #91a096; font: .62rem "DM Mono", monospace; }

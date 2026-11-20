@@ -17,6 +17,7 @@ LyfAi is a full-stack AI chatbot built with React, FastAPI, SQLite, LiteLLM, and
 4. Continue chatting to keep conversation context.
 5. Open **Conversations** to switch between sessions used in that browser.
 6. Optionally enter a system prompt to customize the assistant.
+7. Use the `×` beside a saved conversation to remove it from the browser list.
 
 Each assistant reply shows its resolution source, model, latency, input tokens, and output tokens.
 

@@ -10,14 +10,14 @@ function newSessionId() {
 function initialSessions(currentId) {
   try {
     const saved = JSON.parse(localStorage.getItem("lyfai-sessions") || "[]");
-    return [{ id: currentId, title: "New conversation" }, ...saved.filter((item) => item.id !== currentId)];
+    return saved.filter((item) => item?.id && item.id !== currentId);
   } catch {
-    return [{ id: currentId, title: "New conversation" }];
+    return [];
   }
 }
 
 export default function App() {
-  // A page refresh intentionally starts a new conversation session.
+  // A page refresh starts a draft session until the first message is sent.
   const [sessionId, setSessionId] = useState(newSessionId);
   const [sessions, setSessions] = useState(() => initialSessions(sessionId));
   const [messages, setMessages] = useState([]);
@@ -26,6 +26,9 @@ export default function App() {
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [loadingSession, setLoadingSession] = useState(false);
+  const [draftId, setDraftId] = useState(sessionId);
+  const [draftMessages, setDraftMessages] = useState([]);
+  const [draftMessage, setDraftMessage] = useState("");
 
   useEffect(() => {
     localStorage.setItem("lyfai-sessions", JSON.stringify(sessions.slice(0, 12)));
@@ -37,11 +40,13 @@ export default function App() {
     const text = message.trim();
     setMessage("");
     setError("");
-    setSessions((current) => current.map((item) => (
-      item.id === sessionId && item.title === "New conversation"
-        ? { ...item, title: text.slice(0, 32) }
-        : item
-    )));
+    setDraftId("");
+    setDraftMessages([]);
+    setDraftMessage("");
+    setSessions((current) => [
+      { id: sessionId, title: text.slice(0, 32) },
+      ...current.filter((item) => item.id !== sessionId),
+    ].slice(0, 12));
     setMessages((current) => [...current, { role: "user", content: text }]);
     setSending(true);
     try {
@@ -64,6 +69,19 @@ export default function App() {
 
   async function selectSession(id) {
     if (id === sessionId || loadingSession) return;
+    if (draftId === sessionId) {
+      setDraftId(sessionId);
+      setDraftMessages(messages);
+      setDraftMessage(message);
+    }
+    if (id === draftId) {
+      setSessionId(id);
+      setMessages(draftMessages);
+      setMessage(draftMessage);
+      setSystemPrompt("");
+      setError("");
+      return;
+    }
     setLoadingSession(true);
     setError("");
     try {
@@ -79,16 +97,33 @@ export default function App() {
   }
 
   function createSession() {
+    if (draftId === sessionId && messages.length === 0) {
+      setMessage("");
+      setError("");
+      return;
+    }
     const id = newSessionId();
-    setSessions((current) => [
-      { id, title: "New conversation" },
-      ...current.filter((item) => item.id !== id),
-    ].slice(0, 12));
+    setDraftId(id);
+    setDraftMessages([]);
+    setDraftMessage("");
     setSessionId(id);
     setMessages([]);
     setMessage("");
     setSystemPrompt("");
     setError("");
+  }
+
+  function deleteSession(id) {
+    setSessions((current) => current.filter((item) => item.id !== id));
+    if (id === sessionId) {
+      const id = newSessionId();
+      setDraftId(id);
+      setDraftMessages([]);
+      setDraftMessage("");
+      setSessionId(id);
+      setMessages([]);
+      setMessage("");
+    }
   }
 
   return (
@@ -100,16 +135,37 @@ export default function App() {
           + New conversation
         </button>
         <div className="session-list">
+          {draftId && (
+            <div className={`session-row ${draftId === sessionId ? "selected" : ""}`}>
+              <button
+                className="session-item"
+                onClick={() => selectSession(draftId)}
+                disabled={loadingSession || draftId === sessionId}
+              >
+                <strong>New conversation</strong>
+                <small>{draftId}</small>
+              </button>
+            </div>
+          )}
           {sessions.map((item) => (
-            <button
-              className={`session-item ${item.id === sessionId ? "selected" : ""}`}
-              key={item.id}
-              onClick={() => selectSession(item.id)}
-              disabled={loadingSession}
-            >
-              <strong>{item.title}</strong>
-              <small>{item.id}</small>
-            </button>
+            <div className={`session-row ${item.id === sessionId ? "selected" : ""}`} key={item.id}>
+              <button
+                className="session-item"
+                onClick={() => selectSession(item.id)}
+                disabled={loadingSession}
+              >
+                <strong>{item.title}</strong>
+                <small>{item.id}</small>
+              </button>
+              <button
+                className="delete-session"
+                onClick={() => deleteSession(item.id)}
+                aria-label={`Delete session ${item.id}`}
+                title="Remove session"
+              >
+                ×
+              </button>
+            </div>
           ))}
         </div>
         <p className="session-note">Your sessions are remembered in this browser.</p>
