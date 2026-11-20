@@ -8,6 +8,7 @@ from .config import Settings
 from .db import add_message, get_messages, initialize
 from .providers import generate_reply
 from .schemas import ChatRequest, ChatResponse, Metadata
+from .safety import build_system_prompt, clean_custom_prompt, has_unsafe_request
 
 settings = Settings.from_env()
 cache = ResponseCache()
@@ -67,9 +68,21 @@ async def chat(
     x_simulate_failure: str | None = Header(default=None),
 ) -> ChatResponse:
     message = _clean_message(request.message)
+    if has_unsafe_request(message):
+        raise HTTPException(
+            status_code=422,
+            detail="request contains unsafe or harmful content",
+        )
+    try:
+        custom_prompt = clean_custom_prompt(request.system_prompt)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
     # Combine the system prompt, previous history, and new message for the model.
     history = get_messages(settings.database_url, request.session_id)
-    system_prompt = request.system_prompt or settings.default_system_prompt
+    system_prompt = build_system_prompt(
+        settings.default_system_prompt,
+        custom_prompt,
+    )
     llm_messages = [{"role": "system", "content": system_prompt}]
     llm_messages.extend(
         {"role": item["role"], "content": item["content"]} for item in history

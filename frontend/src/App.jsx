@@ -41,6 +41,12 @@ export default function App() {
   }, [sessions]);
 
   useEffect(() => {
+    const prompts = JSON.parse(localStorage.getItem("lyfai-session-prompts") || "{}");
+    prompts[sessionId] = systemPrompt;
+    localStorage.setItem("lyfai-session-prompts", JSON.stringify(prompts));
+  }, [sessionId, systemPrompt]);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("lyfai-theme", theme);
   }, [theme]);
@@ -93,7 +99,8 @@ export default function App() {
       setSessionId(id);
       setMessages(draftMessages);
       setMessage(draftMessage);
-      setSystemPrompt("");
+      const prompts = JSON.parse(localStorage.getItem("lyfai-session-prompts") || "{}");
+      setSystemPrompt(prompts[id] || "");
       setError("");
       return;
     }
@@ -103,7 +110,8 @@ export default function App() {
       const history = await getSessionMessages(id);
       setSessionId(id);
       setMessages(history);
-      setSystemPrompt("");
+      const prompts = JSON.parse(localStorage.getItem("lyfai-session-prompts") || "{}");
+      setSystemPrompt(prompts[id] || "");
     } catch (requestError) {
       setError(requestError.message);
     } finally {

@@ -126,6 +126,8 @@ A chat request is JSON:
 }
 ```
 
+The optional `system_prompt` is added as session style or behavior guidance. A protected safety policy is always prepended and cannot be disabled or replaced by a user prompt. Requests that attempt prompt override, ask for weapon or explosive instructions, sexual exploitation, or other clearly harmful content are rejected with JSON `422`.
+
 Invalid requests return JSON `422`; unavailable providers return JSON `503`; unknown sessions return JSON `404`.
 
 ## 4. Verification: how to see failover, cache hits and per-message token usage
