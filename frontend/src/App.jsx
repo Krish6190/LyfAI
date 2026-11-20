@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { getSessionMessages, sendMessage } from "./api";
 import { Message } from "./components/Message";
+import { SessionPanel } from "./components/SessionPanel";
+import { AppModal } from "./components/AppModal";
 import "./styles.css";
 
 function newSessionId() {
@@ -29,10 +31,19 @@ export default function App() {
   const [draftId, setDraftId] = useState(sessionId);
   const [draftMessages, setDraftMessages] = useState([]);
   const [draftMessage, setDraftMessage] = useState("");
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("lyfai-theme") || "dark",
+  );
+  const [modal, setModal] = useState(null);
 
   useEffect(() => {
     localStorage.setItem("lyfai-sessions", JSON.stringify(sessions.slice(0, 12)));
   }, [sessions]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("lyfai-theme", theme);
+  }, [theme]);
 
   async function submit(event) {
     event.preventDefault();
@@ -132,64 +143,18 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <aside className="session-panel">
-        <div className="brand">
-          <span className="brand-mark">✦</span>
-          <div>
-            <strong>LYFAI</strong>
-            <small>Think · Create · Explore</small>
-          </div>
-        </div>
-        <p className="session-heading">◷ Sessions</p>
-        <button className="new-session-button" onClick={createSession}>
-          <span>＋</span> New conversation
-        </button>
-        <div className="session-list">
-          {draftId && (
-            <div className={`session-row ${draftId === sessionId ? "selected" : ""}`}>
-              <button
-                className="session-item"
-                onClick={() => selectSession(draftId)}
-                disabled={loadingSession || draftId === sessionId}
-              >
-                <span className="session-icon">▱</span>
-                <span>
-                  <strong>New conversation</strong>
-                  <small>◷ {draftId}</small>
-                </span>
-              </button>
-            </div>
-          )}
-          {sessions.map((item) => (
-            <div className={`session-row ${item.id === sessionId ? "selected" : ""}`} key={item.id}>
-              <button
-                className="session-item"
-                onClick={() => selectSession(item.id)}
-                disabled={loadingSession}
-              >
-                <span className="session-icon">▱</span>
-                <span>
-                  <strong>{item.title}</strong>
-                  <small>◷ {item.id}</small>
-                </span>
-              </button>
-              <button
-                className="delete-session"
-                onClick={() => deleteSession(item.id)}
-                aria-label={`Delete session ${item.id}`}
-                title="Remove session"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-        <div className="session-tools">
-          <button title="Settings" aria-label="Settings">⚙</button>
-          <button title="Theme" aria-label="Theme">◐</button>
-        </div>
-        <p className="session-note">⚡ Your sessions are remembered in this browser.</p>
-      </aside>
+      <SessionPanel
+        draftId={draftId}
+        sessionId={sessionId}
+        sessions={sessions}
+        loadingSession={loadingSession}
+        theme={theme}
+        onCreate={createSession}
+        onSelect={selectSession}
+        onDelete={deleteSession}
+        onModal={setModal}
+        onThemeChange={() => setTheme((current) => current === "dark" ? "light" : "dark")}
+      />
       <section className="chat-card">
         <header>
           <div>
@@ -199,7 +164,13 @@ export default function App() {
           </div>
           <div className="header-tools">
             <span className="status-dot">Online</span>
-            <button className="profile-button" aria-label="Profile">●</button>
+            <button
+              className="profile-button"
+              aria-label="Profile"
+              onClick={() => setModal("profile")}
+            >
+              <span>LK</span>
+            </button>
           </div>
         </header>
         <label className="prompt-label">
@@ -250,6 +221,7 @@ export default function App() {
         </form>
         <footer>Session {sessionId} · Your conversation is stored locally by the API.</footer>
       </section>
+      <AppModal modal={modal} theme={theme} onClose={() => setModal(null)} />
     </main>
   );
 }

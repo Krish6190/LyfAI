@@ -190,6 +190,7 @@ npm run build
 ## 5. Setup Used: your editor and AI tools
 
 - Editor: VS Code
+- AI Tools: GitHub Copilot
 - Frontend: React, Vite, CSS, JavaScript
 - Backend: Python, FastAPI, Pydantic
 - Model gateway: LiteLLM
