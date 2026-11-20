@@ -29,7 +29,7 @@ class Settings:
             database_url=database_path,
             allowed_origins=_csv(os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")),
             api_keys=_csv(os.getenv("LLM_API_KEYS", "")),
-            model=os.getenv("LLM_MODEL", "groq/llama-3.1-8b-instant"),
+            model=os.getenv("LLM_MODEL", "groq/openai/gpt-oss-20b"),
             api_base=os.getenv("LLM_API_BASE") or None,
             default_system_prompt=os.getenv(
                 "DEFAULT_SYSTEM_PROMPT",

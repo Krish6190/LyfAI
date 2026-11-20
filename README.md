@@ -54,7 +54,7 @@ For a non-Docker backend, use `DATABASE_URL=sqlite:///./app.db` and set the othe
 6. Add these environment variables:
 
    - `LLM_API_KEYS`: two comma-separated provider keys
-   - `LLM_MODEL`: for example `groq/llama-3.1-8b-instant`
+   - `LLM_MODEL`: for example `groq/openai/gpt-oss-20b`
    - `LLM_API_BASE`: for example `https://api.groq.com/openai/v1`
    - `DATABASE_URL`: `sqlite:////data/app.db`
    - `ALLOWED_ORIGINS`: temporarily use `https://your-project.vercel.app`, then update it after Vercel deploys
@@ -94,7 +94,7 @@ For the live submission, Render runs the backend Dockerfile and Vercel builds th
 
 Free providers you can use:
 
-- **Groq**: free developer tier; use `LLM_MODEL=groq/llama-3.1-8b-instant`, `LLM_API_BASE=https://api.groq.com/openai/v1`.
+- **Groq**: free developer tier; use `LLM_MODEL=groq/openai/gpt-oss-20b`, `LLM_API_BASE=https://api.groq.com/openai/v1`. Model availability can change, so check the provider's models endpoint if a model is retired.
 - **OpenRouter**: offers free model routes; use a model such as `openrouter/google/gemini-2.0-flash-exp:free`, `LLM_API_BASE=https://openrouter.ai/api/v1`.
 - **Google Gemini**: use LiteLLM's Gemini model names and a Gemini key; see LiteLLM's provider docs for the current model name.
 
