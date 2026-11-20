@@ -110,7 +110,7 @@
   white-space: nowrap;
 }
 .session-item strong { font-size: 0.82rem; }
-.session-item small { margin-top: 5px; color: #69739e; font: 500 0.59rem "DM Mono", monospace; }
+.session-item small { margin-top: 5px; color: #69739e; font: 500 0.62rem "DM Mono", monospace; }
 
 .delete-session {
   width: 26px;

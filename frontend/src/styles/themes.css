@@ -9,27 +9,27 @@
   background: rgba(11, 16, 48, 0.92);
 }
 .composer textarea {
-  min-height: 76px;
-  max-height: 76px;
+  min-height: 82px;
+  max-height: 82px;
   resize: none;
   border: 1px solid rgba(102, 121, 204, 0.22);
   border-radius: 16px;
   color: #ebedff;
   background: rgba(31, 41, 99, 0.72);
   outline: none;
-  font-size: 0.9rem;
+  font-size: 1rem;
   padding: 20px;
   transition: 180ms ease;
 }
 .composer textarea:focus { border-color: #687bd1; box-shadow: 0 0 0 3px rgba(104, 123, 209, 0.08); }
 .composer button {
-  min-height: 76px;
+  min-height: 82px;
   border: 0;
   border-radius: 16px;
   color: #171746;
   background: linear-gradient(135deg, #9a86ef, #7652d9);
   box-shadow: 0 12px 26px rgba(87, 68, 174, 0.24);
-  font-size: 0.88rem;
+  font-size: 0.96rem;
   font-weight: 800;
   transition: 180ms ease;
 }
