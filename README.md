@@ -1,92 +1,62 @@
 # LyfAi
 
-LyfAi is a resilient full-stack AI chatbot built with React, FastAPI, SQLite, LiteLLM, and Docker. It supports multi-turn conversations, response caching, per-message usage metadata, and automatic API-key failover.
+LyfAi is a full-stack AI chatbot built with React, FastAPI, SQLite, LiteLLM, and Docker. It supports multi-turn conversations, API-key failover, response caching, and per-message usage metadata.
 
-## Live application
+## 1. Live URLs
 
 - **Website:** [https://lyf-ai-git-main-krish619s-projects.vercel.app/](https://lyf-ai-git-main-krish619s-projects.vercel.app/)
-- **Backend health:** [https://lyfai.onrender.com/health](https://lyfai.onrender.com/health)
+- **Backend API:** [https://lyfai.onrender.com/](https://lyfai.onrender.com/)
+- **Health endpoint:** [https://lyfai.onrender.com/health](https://lyfai.onrender.com/health)
 - **Source code:** [https://github.com/Krish6190/LyfAI](https://github.com/Krish6190/LyfAI)
 
-## Using the website
+### Using the website
 
 1. Open the live website.
-2. Type a message in the chat box and select **Send**.
-3. Continue sending messages to keep context within the current session.
-4. Optionally enter a system prompt to customize the assistant's behavior.
-5. Press **Enter** to send a message. Press **Shift+Enter** to add a new line.
-6. Use the **Conversations** panel to return to sessions previously used in this browser.
-7. Each assistant response displays:
-   - Resolution source: `LIVE_INFERENCE` or `LLM_CACHE`
-   - Model used
-   - Response latency
-   - Input and output tokens for that request
+2. Type a message and press **Enter** to send it.
+3. Press **Shift+Enter** to add a new line.
+4. Continue chatting to keep conversation context.
+5. Open **Conversations** to switch between sessions used in that browser.
+6. Optionally enter a system prompt to customize the assistant.
 
-A new browser page starts a new session. Previous session IDs are remembered in browser local storage and can be reopened from the Conversations panel. Errors are displayed in the chat instead of leaving a blank screen.
+Each assistant reply shows its resolution source, model, latency, input tokens, and output tokens.
 
-## Run locally with Docker
+## 2. Run locally: with Docker and without
 
-### Requirements
+### With Docker
 
-- Docker Desktop
-- Git
-- An OpenAI-compatible provider API key
-
-### Start
-
-From the repository root:
+Requirements: Docker Desktop, Git, and two OpenAI-compatible API keys.
 
 ```powershell
+cd C:\Users\krish\OneDrive\Desktop\LyfAi
 Copy-Item .env.example .env
 ```
 
-Open `.env` and set `LLM_API_KEYS` to two comma-separated API keys. The included Groq configuration uses:
+Put the API keys in `LLM_API_KEYS` and configure the model in `.env`. The included Groq setup uses:
 
 ```env
 LLM_MODEL=groq/openai/gpt-oss-20b
 LLM_API_BASE=https://api.groq.com/openai/v1
 ```
 
-Start the complete stack:
-
-```powershell
-make up
-```
-
-If `make` is not available in Windows PowerShell, use Docker Compose directly:
-
-```powershell
-docker compose up --build
-```
-
-To keep the stack running in the background:
+Start the stack:
 
 ```powershell
 docker compose up --build -d
 ```
 
-Open:
+Open [http://localhost:3000](http://localhost:3000). The API health endpoint is [http://localhost:8000/health](http://localhost:8000/health).
 
-- Website: [http://localhost:3000](http://localhost:3000)
-- API health: [http://localhost:8000/health](http://localhost:8000/health)
-
-Stop the stack with:
-
-```powershell
-make down
-```
-
-Windows PowerShell alternative:
+Stop the stack:
 
 ```powershell
 docker compose down
 ```
 
-The backend creates the SQLite database automatically. Docker stores it in the named `app_data` volume mounted at `/data`.
+Docker creates an `app_data` named volume mounted at `/data`. SQLite is created automatically at `/data/app.db`.
 
-## Run locally without Docker
+### Without Docker
 
-### Backend
+Backend:
 
 ```powershell
 cd backend
@@ -98,12 +68,11 @@ $env:LLM_API_KEYS="your-key-1,your-key-2"
 $env:LLM_MODEL="groq/openai/gpt-oss-20b"
 $env:LLM_API_BASE="https://api.groq.com/openai/v1"
 $env:ALLOWED_ORIGINS="http://localhost:3000"
+$env:ENABLE_FAILURE_SIMULATION="true"
 uvicorn app.main:app --reload --port 8000
 ```
 
-### Frontend
-
-In a second terminal:
+Frontend in a second terminal:
 
 ```powershell
 cd frontend
@@ -112,17 +81,29 @@ $env:VITE_API_URL="http://localhost:8000"
 npm run dev
 ```
 
-Open the Vite URL shown in the terminal, usually [http://localhost:5173](http://localhost:5173).
+## 3. Design decisions: key fallback, caching, SQLite session storage
 
-## API endpoints
+### API-key fallback
 
-### `GET /health`
+LiteLLM sends requests through the configured OpenAI-compatible provider. The backend tries `key_1`, `key_2`, and subsequent configured keys in order. Simulated failures are isolated to one request and never expose real key values.
 
-Returns service, key-pool, cache, and database availability.
+### Caching
 
-### `POST /chat`
+Responses are cached in memory using a hash of the model and complete message list, including the system prompt, history, and new message. A cache hit returns the identical reply and stored token counts with `LLM_CACHE`. A live response uses `LIVE_INFERENCE`.
 
-Request:
+### SQLite storage
+
+SQLite stores each session's user and assistant messages. New sessions start separately, but each session retains multi-turn history. The Docker volume preserves the SQLite file across container restarts.
+
+### API contract
+
+The backend exposes:
+
+- `GET /health`
+- `POST /chat`
+- `GET /sessions/{session_id}/messages`
+
+A chat request is JSON:
 
 ```json
 {
@@ -132,64 +113,76 @@ Request:
 }
 ```
 
-`system_prompt` is optional. The response includes the assistant reply and request metadata.
+Invalid requests return JSON `422`; unavailable providers return JSON `503`; unknown sessions return JSON `404`.
 
-### `GET /sessions/{session_id}/messages`
+## 4. Verification: how to see failover, cache hits and per-message token usage
 
-Returns the stored conversation history for a session, oldest message first.
+### Live health
 
-## Caching and failover verification
+Open [https://lyfai.onrender.com/health](https://lyfai.onrender.com/health). It should report the running status, number of configured keys, and cache status.
 
-Send the same first message in two different sessions. The second request should return `LLM_CACHE` with the same reply and `key_id: null`.
+### Cache hit
 
-With `ENABLE_FAILURE_SIMULATION=true`, simulate a failed first key:
+1. Send a distinctive first message in one browser session.
+2. Open the live website in a new tab.
+3. Send the exact same message.
+4. The second response should show `LLM_CACHE`, identical reply text, and a `null` key ID.
+
+### Failover
+
+Run this from a separate PowerShell window:
 
 ```powershell
-curl.exe -X POST http://localhost:8000/chat `
+curl.exe -X POST https://lyfai.onrender.com/chat `
   -H "Content-Type: application/json" `
   -H "X-Simulate-Failure: key_1=429" `
-  -d '{\"session_id\":\"demo\",\"message\":\"Say hello\"}'
+  -d '{\"session_id\":\"video-failover-12345\",\"message\":\"Say fallback is working\"}'
 ```
 
-The response should use `key_2` and report `fallback_attempts: 1`. Using `X-Simulate-Failure: *=429` makes every key fail and returns a JSON `503` without adding the request to history.
+This is an API test, not a chat-box message. The header makes `key_1` behave as if it returned 429 for that request, and the response should use `key_2` with `fallback_attempts: 1`.
 
-## Deployment
+Use `X-Simulate-Failure: *=429` to demonstrate all-provider failure. It should return `503 {"detail":"all providers unavailable"}` without adding the failed request to history.
 
-The live deployment uses Vercel for the React frontend and Render for the Dockerized FastAPI backend.
+### Per-message usage
 
-- Vercel builds the `frontend` directory with `npm run build`.
-- Render runs the `backend/Dockerfile`.
-- `VITE_API_URL` points the frontend to the Render backend.
-- `ALLOWED_ORIGINS` contains the exact Vercel website origin.
-- SQLite is created automatically at `/data/app.db`.
-- A Render persistent disk mounted at `/data` is needed when database data must survive service redeploys. Without one, Render's filesystem is ephemeral.
+Every assistant message displays input and output token counts for that individual request. Cache hits preserve the original stored usage.
 
-## Project structure
+### Tests
 
-```text
-backend/
-  app/
-    cache.py       # In-memory response cache
-    config.py      # Environment configuration
-    db.py          # SQLite schema and history storage
-    main.py        # FastAPI routes and request flow
-    providers.py   # LiteLLM provider failover
-    schemas.py     # API request and response models
-  tests/
-frontend/
-  src/
-    components/    # Reusable chat message UI
-    api.js         # Backend HTTP client
-    App.jsx        # Chat session and interface
-docker-compose.yml
-Makefile
-.env.example
+Run the backend tests:
+
+```powershell
+cd backend
+python -m pytest -q
 ```
 
-## Security
+Build the frontend:
 
-Never commit `.env` or place real API keys in the repository. Use `.env.example` as the configuration template.
+```powershell
+cd frontend
+npm run build
+```
 
-## Technology
+## 5. Setup Used: your editor and AI tools
 
-React, Vite, FastAPI, SQLite, LiteLLM, Docker, Docker Compose, Render, Vercel, and pytest.
+- Editor: VS Code
+- AI development assistant: GitHub Copilot
+- Frontend: React, Vite, CSS, JavaScript
+- Backend: Python, FastAPI, Pydantic
+- Model gateway: LiteLLM
+- Provider: Groq with an OpenAI-compatible API
+- Storage: SQLite
+- Deployment: Docker, Docker Compose, Render, and Vercel
+- Testing: pytest
+- Source control: Git and GitHub
+
+## 6. Bonus features (if any): what you added beyond the requirements and why
+
+- Optional system-prompt input for controlling the session voice.
+- Conversation switching with browser-stored session IDs and history loaded through SQLite.
+- Enter-to-send and Shift+Enter newline behavior.
+- Responsive dark interface with request metadata beside every assistant reply.
+- Readable JSON errors and API status handling instead of blank UI states.
+- Docker startup with a persistent named SQLite volume.
+
+Authentication was intentionally not included within the short assignment time limit. The public demo uses client-generated session IDs, so chat history should not be considered private. A production release would add user authentication, authorization, session ownership, rate limiting, and stronger secret management.
