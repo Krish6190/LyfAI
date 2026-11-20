@@ -88,6 +88,31 @@ export default function App() {
     setMessage(text);
   }
 
+  function usePromptPreset(text) {
+    setSystemPrompt(text);
+  }
+
+  function formatApiError(error) {
+    const detail = error?.message?.toLowerCase() || "";
+    if (error?.status === 422 && (
+      detail.includes("unsafe")
+      || detail.includes("harmful")
+      || detail.includes("override")
+    )) {
+      return "⚠ Safety check blocked this request. It may be harmful or try to override the assistant's safety rules.";
+    }
+    if (error?.status === 422) {
+      return `⚠ ${error.message}`;
+    }
+    if (error?.status === 503) {
+      return "⚠ The AI providers are temporarily unavailable. Please try again in a moment.";
+    }
+    if (error?.message?.includes("Failed to fetch")) {
+      return "⚠ Cannot reach the assistant service. Check your connection and try again.";
+    }
+    return error?.message || "⚠ The assistant could not complete this request.";
+  }
+
   async function selectSession(id) {
     if (id === sessionId || loadingSession) return;
     if (draftId === sessionId) {
@@ -113,7 +138,7 @@ export default function App() {
       const prompts = JSON.parse(localStorage.getItem("lyfai-session-prompts") || "{}");
       setSystemPrompt(prompts[id] || "");
     } catch (requestError) {
-      setError(requestError.message);
+      setError(formatApiError(requestError));
     } finally {
       setLoadingSession(false);
     }
@@ -182,7 +207,17 @@ export default function App() {
           </div>
         </header>
         <label className="prompt-label">
-          <span className="prompt-heading"><span className="prompt-spark">✦</span> System prompt <em>optional</em></span>
+          <span className="prompt-heading">
+            <span className="prompt-spark">✦</span> System prompt
+            <em>optional</em>
+            {systemPrompt.trim() && <em className="prompt-active">active</em>}
+          </span>
+          <span className="prompt-presets" aria-label="System prompt suggestions">
+            <button type="button" onClick={() => usePromptPreset("Answer as a concise technical expert.")}>Concise expert</button>
+            <button type="button" onClick={() => usePromptPreset("Explain ideas clearly for a beginner.")}>Beginner friendly</button>
+            <button type="button" onClick={() => usePromptPreset("Review code carefully and suggest safer alternatives.")}>Code reviewer</button>
+            <button type="button" onClick={() => usePromptPreset("")}>Clear</button>
+          </span>
           <textarea
             data-testid="system-prompt-input"
             value={systemPrompt}

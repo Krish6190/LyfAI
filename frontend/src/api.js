@@ -7,8 +7,20 @@ export async function sendMessage(payload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.detail || "The assistant is unavailable.");
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error("The assistant returned an unreadable response. Please try again.");
+  }
+  if (!response.ok) {
+    const detail = typeof data.detail === "string"
+      ? data.detail
+      : "The assistant could not complete this request.";
+    const error = new Error(detail);
+    error.status = response.status;
+    throw error;
+  }
   return data;
 }
 

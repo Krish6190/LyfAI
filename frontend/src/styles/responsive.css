@@ -30,6 +30,14 @@
   .profile-button { width: 36px; height: 36px; }
   .prompt-label { margin: 10px 14px 0; }
   .prompt-label textarea { min-height: 64px; max-height: 64px; font-size: 0.78rem; }
+  .prompt-presets {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .prompt-presets button {
+    flex: none;
+  }
   .conversation { padding: 12px 14px; }
   .empty-state { transform: none; }
   .orb { width: 64px; height: 64px; font-size: 1.7rem; }

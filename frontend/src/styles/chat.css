@@ -107,6 +107,33 @@ h1 {
   font-style: normal;
   padding: 3px 7px;
 }
+.prompt-heading .prompt-active {
+  border-color: rgba(115, 211, 186, 0.28);
+  color: #73d3ba;
+  background: rgba(115, 211, 186, 0.08);
+}
+.prompt-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: -1px 0 0;
+}
+.prompt-presets button {
+  min-height: 28px;
+  border: 1px solid rgba(102, 121, 204, 0.16);
+  border-radius: 999px;
+  color: #9da7cb;
+  background: rgba(24, 34, 84, 0.48);
+  font-size: 0.58rem;
+  padding: 0 9px;
+  transition: 180ms ease;
+}
+.prompt-presets button:hover {
+  color: #edf0ff;
+  border-color: #667bd8;
+  background: rgba(49, 61, 125, 0.7);
+  transform: translateY(-1px);
+}
 .prompt-label textarea {
   min-height: 74px;
   max-height: 74px;

@@ -37,7 +37,17 @@
 .composer button:disabled { opacity: 0.55; }
 
 .typing { color: #929bc2; font-size: 0.75rem; }
-.error-message { border: 1px solid #85455a; border-radius: 10px; color: #ffc1c9; background: #33213f; padding: 10px 12px; }
+.error-message {
+  border: 1px solid rgba(222, 168, 94, 0.34);
+  border-radius: 10px;
+  color: #ffd79a;
+  background: rgba(91, 64, 41, 0.72);
+  box-shadow: 0 10px 24px rgba(10, 12, 40, 0.12);
+  font-size: 0.76rem;
+  line-height: 1.5;
+  padding: 10px 12px;
+  animation: messageIn 0.28s ease-out both;
+}
 footer { display: none; }
 
 .modal-backdrop {
