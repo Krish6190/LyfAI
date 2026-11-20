@@ -1,37 +1,89 @@
 # LyfAi
 
-## 1. Live URLs
+LyfAi is a resilient full-stack AI chatbot built with React, FastAPI, SQLite, LiteLLM, and Docker. It supports multi-turn conversations, response caching, per-message usage metadata, and automatic API-key failover.
 
-After deployment, set these values:
+## Live application
 
-- Frontend: `https://your-project.vercel.app`
-- Backend: `https://your-service.onrender.com`
+- **Website:** [https://lyf-ai-git-main-krish619s-projects.vercel.app/](https://lyf-ai-git-main-krish619s-projects.vercel.app/)
+- **Backend health:** [https://lyfai.onrender.com/health](https://lyfai.onrender.com/health)
+- **Source code:** [https://github.com/Krish6190/LyfAI](https://github.com/Krish6190/LyfAI)
 
-Replace the placeholders above with your actual URLs.
+## Using the website
 
-## 2. Run locally: with Docker and without
+1. Open the live website.
+2. Type a message in the chat box and select **Send**.
+3. Continue sending messages to keep context within the current session.
+4. Optionally enter a system prompt to customize the assistant's behavior.
+5. Each assistant response displays:
+   - Resolution source: `LIVE_INFERENCE` or `LLM_CACHE`
+   - Model used
+   - Response latency
+   - Input and output tokens for that request
 
-### With Docker
+A new browser page starts a new session. Errors are displayed in the chat instead of leaving a blank screen.
 
-1. Copy `.env.example` to `.env`.
-2. Put two real API keys in `LLM_API_KEYS`.
-3. Run `make up`.
-4. Open [http://localhost:3000](http://localhost:3000). The API is at [http://localhost:8000](http://localhost:8000).
-5. Stop with `make down`.
+## Run locally with Docker
 
-### Without Docker
+### Requirements
 
-Backend:
+- Docker Desktop
+- Git
+- An OpenAI-compatible provider API key
+
+### Start
+
+From the repository root:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Open `.env` and set `LLM_API_KEYS` to two comma-separated API keys. The included Groq configuration uses:
+
+```env
+LLM_MODEL=groq/openai/gpt-oss-20b
+LLM_API_BASE=https://api.groq.com/openai/v1
+```
+
+Start the complete stack:
+
+```powershell
+make up
+```
+
+Open:
+
+- Website: [http://localhost:3000](http://localhost:3000)
+- API health: [http://localhost:8000/health](http://localhost:8000/health)
+
+Stop the stack with:
+
+```powershell
+make down
+```
+
+The backend creates the SQLite database automatically. Docker stores it in the named `app_data` volume mounted at `/data`.
+
+## Run locally without Docker
+
+### Backend
 
 ```powershell
 cd backend
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
+$env:DATABASE_URL="sqlite:///./app.db"
+$env:LLM_API_KEYS="your-key-1,your-key-2"
+$env:LLM_MODEL="groq/openai/gpt-oss-20b"
+$env:LLM_API_BASE="https://api.groq.com/openai/v1"
+$env:ALLOWED_ORIGINS="http://localhost:3000"
 uvicorn app.main:app --reload --port 8000
 ```
 
-In another terminal:
+### Frontend
+
+In a second terminal:
 
 ```powershell
 cd frontend
@@ -40,87 +92,84 @@ $env:VITE_API_URL="http://localhost:8000"
 npm run dev
 ```
 
-For a non-Docker backend, use `DATABASE_URL=sqlite:///./app.db` and set the other values from `.env.example`.
+Open the Vite URL shown in the terminal, usually [http://localhost:5173](http://localhost:5173).
 
-## Deploying with Render + Vercel
+## API endpoints
 
-### 1. Deploy the backend on Render
+### `GET /health`
 
-1. Push this folder to a public GitHub repository.
-2. In Render, choose **New + > Web Service**, connect the repository, and select **Docker**.
-3. Set the Docker context/root directory to `backend`.
-4. You do **not** create a separate database: the application creates `/data/app.db` and its tables automatically on startup.
-5. Attach a persistent disk mounted at `/data` if SQLite data must survive redeploys. Render's default filesystem is ephemeral, and persistent disks require a paid Render service.
-6. Add these environment variables:
+Returns service, key-pool, cache, and database availability.
 
-   - `LLM_API_KEYS`: two comma-separated provider keys
-   - `LLM_MODEL`: for example `groq/openai/gpt-oss-20b`
-   - `LLM_API_BASE`: for example `https://api.groq.com/openai/v1`
-   - `DATABASE_URL`: `sqlite:////data/app.db`
-   - `ALLOWED_ORIGINS`: temporarily use `https://your-project.vercel.app`, then update it after Vercel deploys
-   - `ENABLE_FAILURE_SIMULATION`: `true`
-   - `DEFAULT_SYSTEM_PROMPT`: `You are a helpful, concise assistant.`
-7. Deploy and open `https://your-service.onrender.com/health`. It should return `"status":"ok"`.
+### `POST /chat`
 
-### 2. Deploy the frontend on Vercel
+Request:
 
-1. In Vercel, import the same GitHub repository.
-2. Set **Root Directory** to `frontend`.
-3. Vercel detects Vite automatically. Use `npm run build` as the build command and `dist` as the output directory.
-4. Add `VITE_API_URL=https://your-service.onrender.com`.
-5. Deploy and open the generated Vercel URL.
-6. Go back to Render and set `ALLOWED_ORIGINS` to the exact Vercel URL, then redeploy the backend.
+```json
+{
+  "session_id": "s-demo",
+  "message": "What is the capital of France?",
+  "system_prompt": "Be concise."
+}
+```
 
-The browser frontend must use the Render URL, not `localhost`. Test the connection by sending a message and opening the backend `/health` endpoint.
+`system_prompt` is optional. The response includes the assistant reply and request metadata.
 
-### Showing the Docker requirement
+### `GET /sessions/{session_id}/messages`
 
-Docker is explicitly mandatory in the assignment. In your demo, show:
+Returns the stored conversation history for a session, oldest message first.
 
-1. `make up` starting both services.
-2. `docker compose ps` showing `backend` and `frontend` as running.
-3. `http://localhost:3000` displaying the chat.
-4. `http://localhost:8000/health` returning the health JSON.
-5. `make down` stopping the stack.
+## Caching and failover verification
 
-For the live submission, Render runs the backend Dockerfile and Vercel builds the frontend Docker-independent. The repository still includes the required Dockerfiles, `docker-compose.yml`, named `/data` volume, and Makefile.
+Send the same first message in two different sessions. The second request should return `LLM_CACHE` with the same reply and `key_id: null`.
 
-## 3. Design decisions: key fallback, caching, SQLite session storage
-
-- `providers.py` tries keys in order and records only `key_1`, `key_2`, etc.; the key material never enters a response.
-- LiteLLM provides the OpenAI-compatible model gateway. The small in-memory cache is keyed by model plus the complete system/history/new-message list, preserving exact cache-hit replies and token usage.
-- SQLite stores user and assistant messages under the configured `DATABASE_URL`. Docker mounts `/data` as a named volume so history survives restarts.
-- Every failed provider attempt is isolated. If all keys fail, the API returns JSON `503` without writing the request to history.
-
-Free providers you can use:
-
-- **Groq**: free developer tier; use `LLM_MODEL=groq/openai/gpt-oss-20b`, `LLM_API_BASE=https://api.groq.com/openai/v1`. Model availability can change, so check the provider's models endpoint if a model is retired.
-- **OpenRouter**: offers free model routes; use a model such as `openrouter/google/gemini-2.0-flash-exp:free`, `LLM_API_BASE=https://openrouter.ai/api/v1`.
-- **Google Gemini**: use LiteLLM's Gemini model names and a Gemini key; see LiteLLM's provider docs for the current model name.
-
-Use two keys from one provider or a mix of compatible providers. Never commit `.env`.
-
-## 4. Verification: how to see failover, cache hits and per-message token usage
-
-The app starts a new session on each page load. Send the same first message twice in separate sessions: the second response should show `LLM_CACHE`, identical text, and `key_id` as `null`. Metadata beside each answer shows source, model, latency, input tokens, and output tokens for that request only.
-
-With `ENABLE_FAILURE_SIMULATION=true`, demonstrate fallback:
+With `ENABLE_FAILURE_SIMULATION=true`, simulate a failed first key:
 
 ```powershell
-curl -X POST http://localhost:8000/chat `
+curl.exe -X POST http://localhost:8000/chat `
   -H "Content-Type: application/json" `
   -H "X-Simulate-Failure: key_1=429" `
   -d '{\"session_id\":\"demo\",\"message\":\"Say hello\"}'
 ```
 
-This should use `key_2`. `X-Simulate-Failure: *=429` should return `503` and should not add a message. The backend tests cover cache, validation, and simulated fallback.
+The response should use `key_2` and report `fallback_attempts: 1`. Using `X-Simulate-Failure: *=429` makes every key fail and returns a JSON `503` without adding the request to history.
 
-## 5. Setup Used
+## Deployment
 
-VS Code with Copilot SDK, React/Vite, FastAPI, SQLite, LiteLLM, Docker Compose, and pytest.
+The live deployment uses Vercel for the React frontend and Render for the Dockerized FastAPI backend.
 
-## 6. Bonus features (if any)
+- Vercel builds the `frontend` directory with `npm run build`.
+- Render runs the `backend/Dockerfile`.
+- `VITE_API_URL` points the frontend to the Render backend.
+- `ALLOWED_ORIGINS` contains the exact Vercel website origin.
+- SQLite is created automatically at `/data/app.db`.
+- A Render persistent disk mounted at `/data` is needed when database data must survive service redeploys. Without one, Render's filesystem is ephemeral.
 
-- Optional per-session system prompt field.
-- Responsive dark interface with readable provider metadata.
-- A provider base URL makes the same backend compatible with several OpenAI-compatible free API services.
+## Project structure
+
+```text
+backend/
+  app/
+    cache.py       # In-memory response cache
+    config.py      # Environment configuration
+    db.py          # SQLite schema and history storage
+    main.py        # FastAPI routes and request flow
+    providers.py   # LiteLLM provider failover
+    schemas.py     # API request and response models
+  tests/
+frontend/
+  src/
+    components/    # Reusable chat message UI
+    api.js         # Backend HTTP client
+    App.jsx        # Chat session and interface
+docker-compose.yml
+Makefile
+.env.example
+```
+
+## Security
+
+Never commit `.env` or place real API keys in the repository. Use `.env.example` as the configuration template.
+
+## Technology
+
+React, Vite, FastAPI, SQLite, LiteLLM, Docker, Docker Compose, Render, Vercel, and pytest.
