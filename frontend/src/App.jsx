@@ -35,6 +35,7 @@ export default function App() {
     () => localStorage.getItem("lyfai-theme") || "dark",
   );
   const [modal, setModal] = useState(null);
+  const [activePromptPreset, setActivePromptPreset] = useState("");
 
   useEffect(() => {
     localStorage.setItem("lyfai-sessions", JSON.stringify(sessions.slice(0, 12)));
@@ -90,6 +91,7 @@ export default function App() {
 
   function usePromptPreset(text) {
     setSystemPrompt(text);
+    setActivePromptPreset(text);
   }
 
   function formatApiError(error) {
@@ -213,15 +215,18 @@ export default function App() {
             {systemPrompt.trim() && <em className="prompt-active">active</em>}
           </span>
           <span className="prompt-presets" aria-label="System prompt suggestions">
-            <button type="button" onClick={() => usePromptPreset("Answer as a concise technical expert.")}>Concise expert</button>
-            <button type="button" onClick={() => usePromptPreset("Explain ideas clearly for a beginner.")}>Beginner friendly</button>
-            <button type="button" onClick={() => usePromptPreset("Review code carefully and suggest safer alternatives.")}>Code reviewer</button>
-            <button type="button" onClick={() => usePromptPreset("")}>Clear</button>
+            <button className={activePromptPreset === "Answer as a concise technical expert." ? "active" : ""} type="button" onClick={() => usePromptPreset("Answer as a concise technical expert.")}>Concise expert</button>
+            <button className={activePromptPreset === "Explain ideas clearly for a beginner." ? "active" : ""} type="button" onClick={() => usePromptPreset("Explain ideas clearly for a beginner.")}>Beginner friendly</button>
+            <button className={activePromptPreset === "Review code carefully and suggest safer alternatives." ? "active" : ""} type="button" onClick={() => usePromptPreset("Review code carefully and suggest safer alternatives.")}>Code reviewer</button>
+            <button className={activePromptPreset === "" && systemPrompt === "" ? "active" : ""} type="button" onClick={() => usePromptPreset("")}>Clear</button>
           </span>
           <textarea
             data-testid="system-prompt-input"
             value={systemPrompt}
-            onChange={(event) => setSystemPrompt(event.target.value)}
+            onChange={(event) => {
+              setSystemPrompt(event.target.value);
+              setActivePromptPreset("");
+            }}
             placeholder="Shape the assistant's voice..."
             rows="2"
             maxLength="400"

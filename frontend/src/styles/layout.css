@@ -14,7 +14,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 24px 18px 16px;
+  padding: 16px 16px 12px;
   border-right: 1px solid rgba(133, 151, 255, 0.08);
   background:
     linear-gradient(160deg, rgba(41, 59, 128, 0.34), transparent 55%),
@@ -25,7 +25,7 @@
 }
 
 .brand {
-  height: 72px;
+  height: 58px;
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -37,8 +37,8 @@
   filter: drop-shadow(0 0 12px rgba(126, 105, 255, 0.72));
 }
 
-.brand strong { display: block; font-size: 1.72rem; line-height: 1; }
-.brand small { display: block; margin-top: 8px; color: #858cae; font-size: 0.68rem; }
+.brand strong { display: block; font-size: 1.48rem; line-height: 1; }
+.brand small { display: block; margin-top: 6px; color: #858cae; font-size: 0.62rem; }
 .session-heading {
   margin: 14px 0 12px;
   color: #727eaf;
@@ -48,13 +48,13 @@
 }
 
 .new-session-button {
-  height: 56px;
+  height: 46px;
   border: 0;
   border-radius: 12px;
   color: white;
   background: linear-gradient(135deg, #5a6cf2, #5069df 58%, #6d43dc);
   box-shadow: 0 12px 28px rgba(78, 91, 205, 0.22);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 700;
   margin-bottom: 18px;
   transition: 180ms ease;
