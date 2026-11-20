@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { sendMessage } from "./api";
+import { useEffect, useState } from "react";
+import { getSessionMessages, sendMessage } from "./api";
 import { Message } from "./components/Message";
 import "./styles.css";
 
@@ -7,14 +7,29 @@ function newSessionId() {
   return `s-${crypto.randomUUID().slice(0, 8)}`;
 }
 
+function initialSessions(currentId) {
+  try {
+    const saved = JSON.parse(localStorage.getItem("lyfai-sessions") || "[]");
+    return [{ id: currentId, title: "New conversation" }, ...saved.filter((item) => item.id !== currentId)];
+  } catch {
+    return [{ id: currentId, title: "New conversation" }];
+  }
+}
+
 export default function App() {
   // A page refresh intentionally starts a new conversation session.
-  const [sessionId] = useState(newSessionId);
+  const [sessionId, setSessionId] = useState(newSessionId);
+  const [sessions, setSessions] = useState(() => initialSessions(sessionId));
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
+  const [loadingSession, setLoadingSession] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("lyfai-sessions", JSON.stringify(sessions.slice(0, 12)));
+  }, [sessions]);
 
   async function submit(event) {
     event.preventDefault();
@@ -22,6 +37,11 @@ export default function App() {
     const text = message.trim();
     setMessage("");
     setError("");
+    setSessions((current) => current.map((item) => (
+      item.id === sessionId && item.title === "New conversation"
+        ? { ...item, title: text.slice(0, 32) }
+        : item
+    )));
     setMessages((current) => [...current, { role: "user", content: text }]);
     setSending(true);
     try {
@@ -42,8 +62,42 @@ export default function App() {
     }
   }
 
+  async function selectSession(id) {
+    if (id === sessionId || loadingSession) return;
+    setLoadingSession(true);
+    setError("");
+    try {
+      const history = await getSessionMessages(id);
+      setSessionId(id);
+      setMessages(history);
+      setSystemPrompt("");
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setLoadingSession(false);
+    }
+  }
+
   return (
     <main className="app-shell">
+      <aside className="session-panel">
+        <p className="eyebrow">LYFAI / SESSIONS</p>
+        <h2>Conversations</h2>
+        <div className="session-list">
+          {sessions.map((item) => (
+            <button
+              className={`session-item ${item.id === sessionId ? "selected" : ""}`}
+              key={item.id}
+              onClick={() => selectSession(item.id)}
+              disabled={loadingSession}
+            >
+              <strong>{item.title}</strong>
+              <small>{item.id}</small>
+            </button>
+          ))}
+        </div>
+        <p className="session-note">Your sessions are remembered in this browser.</p>
+      </aside>
       <section className="chat-card">
         <header>
           <div>
@@ -78,6 +132,12 @@ export default function App() {
             data-testid="chat-input"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                submit(event);
+              }
+            }}
             placeholder="Write a message..."
             rows="1"
             disabled={sending}

@@ -11,3 +11,10 @@ export async function sendMessage(payload) {
   if (!response.ok) throw new Error(data.detail || "The assistant is unavailable.");
   return data;
 }
+
+export async function getSessionMessages(sessionId) {
+  const response = await fetch(`${API_URL}/sessions/${sessionId}/messages`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.detail || "Unable to load this session.");
+  return data.messages;
+}

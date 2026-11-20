@@ -14,13 +14,15 @@ LyfAi is a resilient full-stack AI chatbot built with React, FastAPI, SQLite, Li
 2. Type a message in the chat box and select **Send**.
 3. Continue sending messages to keep context within the current session.
 4. Optionally enter a system prompt to customize the assistant's behavior.
-5. Each assistant response displays:
+5. Press **Enter** to send a message. Press **Shift+Enter** to add a new line.
+6. Use the **Conversations** panel to return to sessions previously used in this browser.
+7. Each assistant response displays:
    - Resolution source: `LIVE_INFERENCE` or `LLM_CACHE`
    - Model used
    - Response latency
    - Input and output tokens for that request
 
-A new browser page starts a new session. Errors are displayed in the chat instead of leaving a blank screen.
+A new browser page starts a new session. Previous session IDs are remembered in browser local storage and can be reopened from the Conversations panel. Errors are displayed in the chat instead of leaving a blank screen.
 
 ## Run locally with Docker
 
