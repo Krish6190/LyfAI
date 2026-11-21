@@ -75,3 +75,27 @@ def test_safety_policy_cannot_be_overridden(tmp_path, monkeypatch):
 
     assert unsafe_prompt.status_code == 422
     assert unsafe_request.status_code == 422
+
+
+def test_failover_header_bypasses_cache(tmp_path, monkeypatch):
+    client, _ = _client(tmp_path, monkeypatch)
+
+    async def fake_generate_reply(**kwargs):
+        if kwargs["simulated_failures"]:
+            assert kwargs["simulated_failures"] == {"key_1": 429}
+            return ProviderReply("Fallback answer", "test/model", 12, 3, "key_2", 1)
+        return ProviderReply("Cached live answer", "test/model", 12, 3, "key_1", 0)
+
+    monkeypatch.setattr(main, "generate_reply", fake_generate_reply)
+    first = client.post("/chat", json={"session_id": "cache-s1", "message": "Unique prompt"})
+    assert first.status_code == 200
+
+    simulated = client.post(
+        "/chat",
+        headers={"X-Simulate-Failure": "key_1=429"},
+        json={"session_id": "cache-s2", "message": "Unique prompt"},
+    )
+    assert simulated.status_code == 200
+    assert simulated.json()["reply"] == "Fallback answer"
+    assert simulated.json()["metadata"]["resolution_source"] == "LIVE_INFERENCE"
+    assert simulated.json()["metadata"]["key_id"] == "key_2"

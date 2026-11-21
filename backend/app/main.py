@@ -89,7 +89,8 @@ async def chat(
     )
     llm_messages.append({"role": "user", "content": message})
     started = time.perf_counter()
-    cached = cache.get(settings.model, llm_messages)
+    simulated_failures = _parse_failures(x_simulate_failure)
+    cached = None if simulated_failures else cache.get(settings.model, llm_messages)
     if cached:
         # Cache hits preserve the original reply and token counts.
         metadata = Metadata(
@@ -118,7 +119,7 @@ async def chat(
             api_base=settings.api_base,
             api_keys=settings.api_keys,
             messages=llm_messages,
-            simulated_failures=_parse_failures(x_simulate_failure),
+            simulated_failures=simulated_failures,
         )
     except RuntimeError as error:
         raise HTTPException(status_code=503, detail="all providers unavailable") from error

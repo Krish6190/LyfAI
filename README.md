@@ -150,13 +150,16 @@ The cache key includes the complete message list sent to the model. Repeating th
 Run this from a separate PowerShell window:
 
 ```powershell
-curl.exe -X POST https://lyfai.onrender.com/chat `
-  -H "Content-Type: application/json" `
-  -H "X-Simulate-Failure: key_1=429" `
-  -d '{\"session_id\":\"video-failover-12345\",\"message\":\"Say fallback is working\"}'
+'{"session_id":"video-failover-98765","message":"Say exactly: fallback demonstration 98765"}' |
+  curl.exe -X POST "https://lyfai.onrender.com/chat" `
+    -H "Content-Type: application/json" `
+    -H "X-Simulate-Failure: key_1=429" `
+    --data-binary "@-"
 ```
 
 This is an API test, not a chat-box message. The header makes `key_1` behave as if it returned 429 for that request, and the response should use `key_2` with `fallback_attempts: 1`.
+
+Failover simulation bypasses the response cache for that request. It always returns `LIVE_INFERENCE` and exercises key selection instead of returning an earlier `LLM_CACHE` result.
 
 Supported simulation header formats:
 
